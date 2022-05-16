@@ -1,0 +1,77 @@
+REPORT z06_atualizacaotl_3_5.
+
+*  ------------------------------------------------------------
+*  Objetivo: calculo de rateio
+*  Autor: Gabriel Farah
+*  ----------------------
+
+DATA: clt_data_voo TYPE sbook-fldate,
+      tl_sbook     TYPE TABLE OF sbook.
+
+FIELD-SYMBOLS <companhia> LIKE LINE OF tl_sbook.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE tx01.
+
+PARAMETERS: s_price TYPE sbook-carrid.
+SELECT-OPTIONS s_data FOR clt_data_voo OBLIGATORY.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+
+START-OF-SELECTION.
+
+  PERFORM carrega_tabela.
+  PERFORM calcula_peso.
+  PERFORM rateio.
+
+*&---------------------------------------------------------------------*
+*&      Form  carrega_tabela
+*&---------------------------------------------------------------------*
+*       text
+
+*----------------------------------------------------------------------*
+FORM carrega_tabela .
+
+
+  SELECT *
+    FROM sbook
+    INTO TABLE tl_sbook
+    WHERE fldate IN s_data.
+
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'seleção inválida'.
+    STOP.
+  ENDIF.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*&      Form  calcula peso
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM calcula_peso .
+
+  DATA: reservas TYPE i VALUE 0.
+
+  LOOP AT tl_sbook ASSIGNING <companhia>.
+    IF <companhia>-fldate+4(2) = '01'.
+      i = i + 10.
+    ELSE.
+      i = i + 1.
+    ENDIF.
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  RATEIO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM rateio .
+
+
+
+ENDFORM.

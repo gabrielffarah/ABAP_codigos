@@ -1,0 +1,32 @@
+REPORT z06_exercicio_5_2.
+
+DATA: data_por_extenso TYPE char40.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE text-001.
+
+PARAMETERS: data TYPE sy-datum.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+START-OF-SELECTION.
+
+  CALL FUNCTION 'Z06DATA_EXTENSO'
+    EXPORTING
+      l_date         = data
+    IMPORTING
+      data_formatada = data_por_extenso
+    EXCEPTIONS
+      data_invalida  = 1
+      OTHERS         = 2.
+
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+
+  IF sy-subrc = 0.
+    WRITE: 'data por extenso: ', data_por_extenso.
+  ELSE.
+    MESSAGE e000(z06_data_erros) WITH data.
+  ENDIF.

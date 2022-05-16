@@ -1,0 +1,59 @@
+REPORT z06_tabela_interna_3_fs.
+
+*  ------------------------------------------------------------
+*  Objetivo: listar detalhes de voo a partir do país de origem
+*            utilizando field symbol
+*  Autor: Gabriel Farah
+*  ----------------------
+
+DATA: id_clt TYPE scustom-id.
+
+SELECT-OPTIONS s_id FOR id_clt.
+
+TYPES: BEGIN OF ty_cliente,
+         id   TYPE scustom-id,
+         name TYPE scustom-name,
+         city TYPE scustom-city,
+
+       END OF ty_cliente.
+
+
+FIELD-SYMBOLS <linha_cliente> TYPE ty_cliente.
+
+START-OF-SELECTION.
+
+  PERFORM lista_cliente.
+*&---------------------------------------------------------------------*
+*&      Form  LISTA_CLIENTE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM lista_cliente .
+
+  DATA: tb_cliente TYPE TABLE OF ty_cliente.
+
+  SELECT
+           id
+           name
+           city
+      FROM scustom
+      INTO TABLE tb_cliente
+      WHERE id IN s_id.
+
+
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'seleção inválida'.
+    STOP.
+  ENDIF.
+
+  WRITE:/5'Cliente', 15'Nome', 60'Cidade'.
+
+  LOOP AT tb_cliente ASSIGNING <linha_cliente>.
+
+    WRITE:/5 <linha_cliente>-id,
+     15 <linha_cliente>-name,
+     60 <linha_cliente>-city.
+  ENDLOOP.
+
+ENDFORM.

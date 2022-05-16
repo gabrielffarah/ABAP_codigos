@@ -1,0 +1,101 @@
+REPORT z06_atualizacaotl_3_7.
+
+*  ------------------------------------------------------------
+*  Objetivo: all entries
+*  Autor: Gabriel Farah
+*  ----------------------
+
+TYPES: BEGIN OF ty_cia,
+         carrname TYPE scarr-carrname,
+         carrid   TYPE scarr-carrid,
+       END OF ty_cia.
+
+DATA:    clt_data_voo TYPE sflight-fldate,
+         tl_cliente   TYPE TABLE OF sflight,
+         tl_cia       TYPE TABLE OF ty_cia,
+         lt_aux_voos  TYPE TABLE OF sflight.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE tx01.
+
+SELECT-OPTIONS s_data FOR clt_data_voo.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+START-OF-SELECTION.
+
+  PERFORM preenche_tabela.
+  PERFORM preenche_tabela_cia.
+  PERFORM listar_tabela.
+*&---------------------------------------------------------------------*
+*&      Form  preenche_TABELA
+*----------------------------------------------------------------------*
+FORM preenche_tabela .
+
+  "seleciona dados de sflight
+  SELECT *
+    FROM sflight
+    INTO TABLE tl_cliente
+    WHERE fldate IN s_data.
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'seleção inválida'.
+    STOP.
+  ENDIF.
+
+  "  exclui elementos
+  LOOP AT tl_cliente ASSIGNING FIELD-SYMBOL(<cliente>).
+    IF <cliente>-seatsocc < <cliente>-seatsmax * 80 / 100.
+      DELETE tl_cliente.
+    ENDIF.
+  ENDLOOP.
+
+  SORT tl_cliente BY fldate.
+  DELETE ADJACENT DUPLICATES FROM tl_cliente COMPARING carrid.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  PREENCHE_TABELA_CIA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM preenche_tabela_cia.
+
+  IF tl_cliente IS NOT INITIAL.
+    lt_aux_voos = tl_cliente.
+
+    SELECT
+      carrname
+      carrid
+   FROM scarr
+   INTO TABLE tl_cia
+   FOR ALL ENTRIES IN lt_aux_voos
+   WHERE carrid = lt_aux_voos-carrid.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  LISTAR_TABELA
+*&---------------------------------------------------------------------*
+*       text
+
+*----------------------------------------------------------------------*
+FORM listar_tabela .
+
+  LOOP AT tl_cliente ASSIGNING FIELD-SYMBOL(<cliente>).
+
+    READ TABLE tl_cia ASSIGNING FIELD-SYMBOL(<cia>) WITH KEY carrid = <cliente>-carrid.
+
+    WRITE:/'Cod cia', 30 'Data voo', 60 'Preço', 90 'Modelo Avião', 110 'Nome cia', /.
+
+    WRITE:/ <cia>-carrid,
+          30: <cliente>-fldate,
+          48: <cliente>-price,
+          90: <cliente>-currency,
+          110:<cliente>-planetype.
+  ENDLOOP.
+
+
+ENDFORM.

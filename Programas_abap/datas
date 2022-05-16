@@ -1,0 +1,45 @@
+REPORT z06_atividade03.
+
+*--------------------------------------------
+*
+*  Programa: Z06_atividade03
+*  Objetivo: Primeira atividade
+*  Autor:    Gabriel Farah
+*
+*--------------------------------------------
+
+
+*váriaveis
+DATA:
+  data_aux      TYPE sy-datum,
+  dias          TYPE i,
+  numero_letras TYPE i.
+
+
+*  Tela de seleção
+*  ---------------
+SELECTION-SCREEN BEGIN OF BLOCK bloco01 WITH FRAME TITLE text-t02 .
+PARAMETERS: data TYPE sy-datum   OBLIGATORY,
+            nome TYPE lfa1-name1 OBLIGATORY.
+SELECTION-SCREEN END OF BLOCK bloco01.
+
+
+START-OF-SELECTION.
+
+
+  data_aux = data + 1.
+  WRITE:/ text-001, data_aux.
+
+
+  data_aux = data - 1.
+  WRITE:/ 'a data anterior é', data_aux.
+
+  IF data < sy-datum.
+    dias = sy-datum - data.
+    WRITE:/'o intervalo é', dias.
+  ENDIF.
+
+  WRITE:/'primeiras 3 letras: ', nome(3).
+
+  numero_letras = strlen( nome ).
+  WRITE:/'numero de letras (nome):', numero_letras.

@@ -1,0 +1,117 @@
+REPORT z06_atualizacaotl_3_11.
+
+*  ------------------------------------------------------------
+*  Objetivo: all entries
+*  Autor: Gabriel Farah
+*  ----------------------
+
+TYPES: BEGIN OF ty_horario,
+         carrid  TYPE spfli-carrid,
+         deptime TYPE spfli-deptime,
+       END OF ty_horario.
+
+
+
+
+DATA: clt_cod_cia TYPE sflight-carrid,
+      tl_voo      TYPE TABLE OF sflight,
+      tl_aux      TYPE TABLE OF sflight,
+      tl_horario  TYPE TABLE OF ty_horario.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE tx01.
+
+SELECT-OPTIONS s_cia FOR clt_cod_cia.
+
+PARAMETERS: percent TYPE sflight-price.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+
+START-OF-SELECTION.
+
+  PERFORM seleciona_voo.
+  PERFORM sleciona_horario.
+  PERFORM altera_preco.
+
+*&---------------------------------------------------------------------*
+*&      Form  SELECIONA_VOO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM seleciona_voo .
+
+  SELECT *
+  FROM sflight
+  INTO TABLE tl_voo
+  WHERE carrid IN s_cia.
+
+
+  SORT tl_voo BY carrid.
+  tl_aux = tl_voo.
+  DELETE ADJACENT DUPLICATES FROM tl_aux COMPARING carrid.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SLECIONA_HORARIO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM sleciona_horario .
+
+  SELECT
+    carrid
+    deptime
+ FROM spfli
+ INTO TABLE tl_horario
+ FOR ALL ENTRIES IN tl_aux
+ WHERE carrid = tl_aux-carrid.
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'seleção inválida'.
+    STOP.
+  ENDIF.
+
+  SORT tl_horario BY carrid.
+
+  LOOP AT tl_voo ASSIGNING FIELD-SYMBOL(<tl_voo>).
+
+    READ TABLE tl_horario ASSIGNING FIELD-SYMBOL(<tl_horario>) WITH KEY carrid = <tl_voo>-carrid.
+
+
+    IF <tl_voo>-carrid EQ <tl_horario>-carrid AND <tl_horario>-deptime(2) > 18.
+      CONTINUE.
+    ELSE.
+      DELETE tl_voo.
+    ENDIF.
+
+  ENDLOOP.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ALTERA_PRECO
+*&---------------------------------------------------------------------*
+*       text
+*
+FORM altera_preco.
+
+  WRITE:/'Cod cia', 33 'horario voo', 55 'Preço'.
+
+
+  LOOP AT tl_voo ASSIGNING FIELD-SYMBOL(<voo>).
+
+    READ TABLE tl_horario ASSIGNING FIELD-SYMBOL(<hr>) WITH KEY carrid = <voo>-carrid.
+
+    IF <voo>-carrid = <hr>-carrid.
+
+      <voo>-price = <voo>-price + percent.
+
+      WRITE:/ <voo>-carrid,
+           25:<hr>-deptime,
+           57: <voo>-price.
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.

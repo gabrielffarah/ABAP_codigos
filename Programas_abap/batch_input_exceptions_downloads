@@ -1,0 +1,303 @@
+REPORT z06_exercicio_7_2.
+
+*Autor: Gabriel Farah
+*Programa: Exercício 7.2
+*Data: 05/05/2022
+
+TYPES: BEGIN OF ty_arq,
+         codigo_material(18) TYPE c,
+         descricao(40)       TYPE c,
+         numero_antigo(18)   TYPE c,
+         numero_desenho(22)  TYPE c,
+       END OF ty_arq.
+
+TYPES: BEGIN OF ty_arq_saida,
+         codigo_material(18)   TYPE c,
+         descricao(40)         TYPE c,
+         numero_antigo(18)     TYPE c,
+         numero_desenho(22)    TYPE c,
+         mensagem_de_erro(200) TYPE c,
+
+       END OF ty_arq_saida.
+
+DATA: tl_arq       TYPE TABLE OF ty_arq,
+      t_bdc_data   TYPE TABLE OF bdcdata,
+      t_mensagens  TYPE TABLE OF bdcmsgcoll,
+      tl_arq_saida TYPE TABLE OF ty_arq_saida.
+
+FIELD-SYMBOLS <fs_arq> TYPE ty_arq_saida.
+
+PARAMETERS arquivo TYPE string OBLIGATORY.
+
+START-OF-SELECTION.
+
+  PERFORM carrega_arquivo.
+  PERFORM altera_materiais.
+  PERFORM cria_arq_saida.
+
+*&---------------------------------------------------------------------*
+*&      Form  CARREGA_ARQUIVO
+*&---------------------------------------------------------------------*
+*       text
+*-------------------------------------------------*
+
+FORM carrega_arquivo .
+
+  CALL FUNCTION 'GUI_UPLOAD'
+    EXPORTING
+      filename                = arquivo
+      has_field_separator     = 'X'
+    TABLES
+      data_tab                = tl_arq
+*   CHANGING
+*     ISSCANPERFORMED         = ' '
+    EXCEPTIONS
+      file_open_error         = 1
+      file_read_error         = 2
+      no_batch                = 3
+      gui_refuse_filetransfer = 4
+      invalid_type            = 5
+      no_authority            = 6
+      unknown_error           = 7
+      bad_data_format         = 8
+      header_not_allowed      = 9
+      separator_not_allowed   = 10
+      header_too_long         = 11
+      unknown_dp_error        = 12
+      access_denied           = 13
+      dp_out_of_memory        = 14
+      disk_full               = 15
+      dp_timeout              = 16
+      OTHERS                  = 17.
+
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ALTERA_MATERIAIS
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM altera_materiais.
+
+  "PRIMEIRA FORMA DE FAZER
+
+*        Start new screen                                              *
+*----------------------------------------------------------------------*
+**FORM BDC_DYNPRO USING PROGRAM DYNPRO.
+**  CLEAR BDCDATA.
+**  BDCDATA-PROGRAM  = PROGRAM.
+**  BDCDATA-DYNPRO   = DYNPRO.
+**  BDCDATA-DYNBEGIN = 'X'.
+**  APPEND BDCDATA.
+**ENDFORM.
+**
+**FORM BDC_FIELD USING FNAM FVAL.
+**  IF FVAL <> NODATA.
+**    CLEAR BDCDATA.
+**    BDCDATA-FNAM = FNAM.
+**    BDCDATA-FVAL = FVAL.
+**    APPEND BDCDATA.
+**  ENDIF.
+**ENDFORM.
+**
+**FORM BDC_FIELD USING FNAM FVAL.
+**  IF FVAL <> NODATA.
+**    CLEAR BDCDATA.
+**    BDCDATA-FNAM = FNAM.
+**    BDCDATA-FVAL = FVAL.
+**    APPEND BDCDATA.
+**  ENDIF.
+**ENDFORM.
+
+
+
+  LOOP AT tl_arq ASSIGNING FIELD-SYMBOL(<fs_arq>) FROM 2.
+    REFRESH: t_bdc_data,
+            t_mensagens.
+
+    "-----------------------------------------------------------------
+    "Primeira tela
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING FIELD-SYMBOL(<bdc>).
+    <bdc>-program = 'SAPLMGMM'.
+    <bdc>-dynpro = '0060'.
+    <bdc>-dynbegin = 'X'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'BDC_OKCODE'.
+    <bdc>-fval = '=AUSW'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'RMMG1-MATNR'.
+    <bdc>-fval = <fs_arq>-codigo_material.
+
+    "-----------------------------------------------------------------
+    "Segunda tela
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-program = 'SAPLMGMM'.
+    <bdc>-dynpro = '0070'.
+    <bdc>-dynbegin = 'X'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'BDC_OKCODE'.
+    <bdc>-fval = '=ENTR'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'MSICHTAUSW-KZSEL(01)'.
+    <bdc>-fval = 'X'.
+
+    "-----------------------------------------------------------------
+    "Terceira tela
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-program = 'SAPLMGMM'.
+    <bdc>-dynpro = '4004'.
+    <bdc>-dynbegin = 'X'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'BDC_OKCODE'.
+    <bdc>-fval = '=SP02'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'MARA-BISMT'.
+    <bdc>-fval = <fs_arq>-numero_antigo.
+
+    "-----------------------------------------------------------------
+    "Quarta tela
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-program = 'SAPLMGMM'.
+    <bdc>-dynpro = '4004'.
+    <bdc>-dynbegin = 'X'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'BDC_OKCODE'.
+    <bdc>-fval = '=BU'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'MARA-ZEINR'.
+    <bdc>-fval = <fs_arq>-numero_desenho.
+
+    "-------------------------------FIM DOS APPENDS--------------------------------
+
+    CALL TRANSACTION 'MM02' USING t_bdc_data
+                            MODE 'N'
+                      MESSAGES INTO t_mensagens.
+
+
+    PERFORM preenche_arq_saida.
+
+
+  ENDLOOP.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  PREENCHE_ARQ_SAIDA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM preenche_arq_saida .
+
+
+  LOOP AT t_mensagens ASSIGNING FIELD-SYMBOL(<msg>).
+
+    MESSAGE ID <msg>-msgid
+          TYPE <msg>-msgtyp
+          NUMBER <msg>-msgnr
+          INTO DATA(l_msg)
+           WITH <msg>-msgv1
+                <msg>-msgv2
+                <msg>-msgv3
+                <msg>-msgv4.
+
+    APPEND INITIAL LINE TO tl_arq_saida ASSIGNING FIELD-SYMBOL(<fs_saida>).
+    <fs_saida>-codigo_material = <fs_arq>-codigo_material.
+    <fs_saida>-descricao = <fs_arq>-descricao.
+    <fs_saida>-numero_antigo = <fs_arq>-numero_antigo.
+    <fs_saida>-numero_desenho = <fs_arq>-numero_desenho.
+    <fs_saida>-mensagem_de_erro = l_msg.
+
+  ENDLOOP.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  CRIA_ARQ_SAIDA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM cria_arq_saida .
+
+  DATA: arq2 TYPE string.
+
+  CONCATENATE 'MATERIAL' sy-datum sy-uzeit '.log' INTO arq2.
+
+  CALL FUNCTION 'GUI_DOWNLOAD'
+    EXPORTING
+*     BIN_FILESIZE            =
+      filename                = arq2
+*     FILETYPE                = 'ASC'
+*     APPEND                  = ' '
+      WRITE_FIELD_SEPARATOR   = 'X'
+*     HEADER                  = '00'
+*     TRUNC_TRAILING_BLANKS   = ' '
+*     WRITE_LF                = 'X'
+*     COL_SELECT              = ' '
+*     COL_SELECT_MASK         = ' '
+*     DAT_MODE                = ' '
+*     CONFIRM_OVERWRITE       = ' '
+*     NO_AUTH_CHECK           = ' '
+*     CODEPAGE                = ' '
+*     IGNORE_CERR             = ABAP_TRUE
+*     REPLACEMENT             = '#'
+*     WRITE_BOM               = ' '
+*     TRUNC_TRAILING_BLANKS_EOL       = 'X'
+*     WK1_N_FORMAT            = ' '
+*     WK1_N_SIZE              = ' '
+*     WK1_T_FORMAT            = ' '
+*     WK1_T_SIZE              = ' '
+*     WRITE_LF_AFTER_LAST_LINE        = ABAP_TRUE
+*     SHOW_TRANSFER_STATUS    = ABAP_TRUE
+*     VIRUS_SCAN_PROFILE      = '/SCET/GUI_DOWNLOAD'
+*   IMPORTING
+*     FILELENGTH              =
+    TABLES
+      data_tab                = tl_arq_saida
+*     FIELDNAMES              =
+    EXCEPTIONS
+      file_write_error        = 1
+      no_batch                = 2
+      gui_refuse_filetransfer = 3
+      invalid_type            = 4
+      no_authority            = 5
+      unknown_error           = 6
+      header_not_allowed      = 7
+      separator_not_allowed   = 8
+      filesize_not_allowed    = 9
+      header_too_long         = 10
+      dp_error_create         = 11
+      dp_error_send           = 12
+      dp_error_write          = 13
+      unknown_dp_error        = 14
+      access_denied           = 15
+      dp_out_of_memory        = 16
+      disk_full               = 17
+      dp_timeout              = 18
+      file_not_found          = 19
+      dataprovider_exception  = 20
+      control_flush_error     = 21
+      OTHERS                  = 22.
+
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+ENDFORM.

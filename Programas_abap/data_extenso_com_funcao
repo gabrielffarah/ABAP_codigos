@@ -1,0 +1,67 @@
+REPORT z06_exercicio_5_1.
+
+DATA: extenso TYPE char40,
+      mes     TYPE t247-ktx.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE tx01.
+
+PARAMETERS: data TYPE sy-datum.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+START-OF-SELECTION.
+
+  PERFORM testa_data.
+  PERFORM imprime_data USING data.
+
+*&---------------------------------------------------------------------*
+*&      Form  TESTA_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM testa_data .
+
+  CALL FUNCTION 'DATE_CHECK_PLAUSIBILITY'
+    EXPORTING
+      date = data.
+* EXCEPTIONS
+*     PLAUSIBILITY_CHECK_FAILED       = 1
+*     OTHERS                          = 2
+  .
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  IMPRIME_DATA
+*&---------------------------------------------------------------------*
+*       text
+*&---------------------------------------------------------------------*
+
+FORM imprime_data  USING    p_data.
+
+  CALL FUNCTION 'ISP_GET_MONTH_NAME'
+    EXPORTING
+      date        = p_data
+      language    = sy-langu
+*     MONTH_NUMBER       = '00'
+    IMPORTING
+*     LANGU_BACK  =
+      longtext    = mes
+"     shortext    = mes
+    EXCEPTIONS
+      calendar_id = 1
+      date_error  = 2
+      not_found   = 3
+      wrong_input = 4
+      OTHERS      = 5.
+  .
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+  WRITE:/ p_data+6(2) , ' de ' , mes , 'de' , p_data(4).
+
+
+ENDFORM.

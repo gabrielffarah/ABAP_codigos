@@ -1,0 +1,57 @@
+REPORT z06_exercicio1_4.
+
+*--------------------------------------------
+*
+*  Programa: Z06_atividade 1.4
+*
+*  Autor:    Gabriel Farah
+*
+*--------------------------------------------
+
+*entradas
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE text-t01.
+PARAMETERS:
+  nome(40)   TYPE c OBLIGATORY,
+  s_nome(30) TYPE c OBLIGATORY,
+  dt01       TYPE sy-datum OBLIGATORY DEFAULT sy-datum,
+  dt_aux     TYPE sy-datum.
+SELECTION-SCREEN END OF BLOCK bl1.
+
+*dados
+DATA:
+  nome_aux(7)    TYPE c,
+  diferenca_dias TYPE i.
+
+AT SELECTION-SCREEN ON dt01.
+  IF dt01 < sy-datum .
+
+    MESSAGE e001(z06_mensagens_erros).
+
+  ENDIF.
+
+
+AT SELECTION-SCREEN ON dt_aux.
+  IF dt_aux IS NOT INITIAL.
+    IF dt_aux < dt01.
+      MESSAGE e002(z06_mensagens_erros).
+    ENDIF.
+  ENDIF.
+
+
+*pos f8
+START-OF-SELECTION.
+
+
+  CONCATENATE nome(4) s_nome(3) INTO nome_aux.
+  diferenca_dias = dt_aux - dt01.
+
+  WRITE: / 'Código do usuário logado: ', nome_aux,
+         / 'Usuário logado: ', sy-uname.
+
+  IF diferenca_dias > -1.
+    WRITE: /'Diferença em dias entre as datas de início e fim: ', diferenca_dias.
+  ENDIF.
+
+  WRITE: / 'Data atual:', sy-datum,
+         / 'Hora atual:', sy-uzeit,
+         / 'Nome do programa: ', sy-repid.

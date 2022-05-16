@@ -1,0 +1,61 @@
+REPORT z06_exercicio1_5.
+
+*--------------------------------------------
+*
+*  Programa: Z06_atividade 1.5
+*
+*  Autor:    Gabriel Farah
+*
+*--------------------------------------------
+
+DATA:
+  codigo(15)        TYPE c,
+  tamanho_sobrenome TYPE i,
+  aux               TYPE i.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE text-t01.
+
+PARAMETERS:
+  nome(40)   TYPE c OBLIGATORY,
+  s_nome(30) TYPE c OBLIGATORY,
+  data       TYPE sy-datum OBLIGATORY DEFAULT sy-datum.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl2 WITH FRAME TITLE text-t02.
+PARAMETERS:
+  op1 RADIOBUTTON GROUP g1 DEFAULT 'X', "nome/sobrenome"
+  op2 RADIOBUTTON GROUP g1, "nome/data inicial"
+  op3 RADIOBUTTON GROUP g1. "nome/sobrenome/data"
+SELECTION-SCREEN END OF BLOCK bl2.
+
+
+
+AT SELECTION-SCREEN ON data.
+  IF data < sy-datum .
+
+    MESSAGE e001(z06_mensagens_erros).
+
+  ENDIF.
+
+START-OF-SELECTION.
+
+  IF op1 = 'X'.
+    CONCATENATE nome(4) s_nome(3) INTO codigo.
+    WRITE:/ 'codigo gerado:', codigo.
+
+  ELSEIF op2 = 'X'.
+
+    CONCATENATE nome(2) data+2 INTO codigo.
+    WRITE:/ 'codigo gerado:', codigo.
+
+  ELSE.
+
+    CONCATENATE nome(2) s_nome data+4 INTO codigo.
+    WRITE:/ 'codigo gerado:', codigo.
+
+  ENDIF.
+
+  WRITE: / 'Data atual:', sy-datum,
+       / 'Hora atual:', sy-uzeit,
+       / 'Nome do programa: ', sy-repid.

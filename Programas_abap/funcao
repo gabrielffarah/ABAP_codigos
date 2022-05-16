@@ -1,0 +1,47 @@
+REPORT z06_exercicio_5_3.
+
+*--------------------------------------------*
+*  Autor:    Gabriel Fernandes Farah
+*--------------------------------------------
+
+*---Declaração de variavel-----------------------
+DATA: data_por_extenso TYPE char40.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE text-001.
+
+PARAMETERS: dt TYPE sy-datum.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+DATA: primeiro_dia TYPE char2,
+      ultimo_dia   TYPE char2.
+
+START-OF-SELECTION.
+
+  PERFORM calcula_data.
+*&---------------------------------------------------------------------*
+*&      Form  CALCULA_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM calcula_data .
+
+  CALL FUNCTION 'Z06_DATE_BOM_EOM'
+    EXPORTING
+      l_date       = dt
+    IMPORTING
+      first_day    = primeiro_dia
+      last_day     = ultimo_dia
+    EXCEPTIONS
+      invalid_date = 1
+      OTHERS       = 2.
+  .
+  IF sy-subrc = 0.
+    WRITE:/ 'primeiro dia', primeiro_dia.
+    WRITE:/ 'ultimo dia', ultimo_dia.
+  ELSE.
+    MESSAGE e000(z06_data_erros) WITH dt.
+  ENDIF.
+
+
+ENDFORM.

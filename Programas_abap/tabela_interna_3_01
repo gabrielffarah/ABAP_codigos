@@ -1,0 +1,53 @@
+REPORT z06_tabela_interna_3_01.
+
+*Autor: Gabriel Farah
+*Programa: exercício 3.1, utilizando de linha de cabeçalho
+
+DATA: id_clt TYPE scustom-id.
+
+SELECT-OPTIONS s_id FOR id_clt.
+
+TYPES: BEGIN OF ty_cliente,
+
+         id   TYPE scustom-id,
+         name TYPE scustom-name,
+         city TYPE scustom-city.
+
+TYPES END OF ty_cliente.
+
+START-OF-SELECTION.
+
+  PERFORM lista_clientes.
+*&---------------------------------------------------------------------*
+*&      Form  LISTA_CLIENTES
+*&---------------------------------------------------------------------*
+*       text
+
+*----------------------------------------------------------------------*
+FORM lista_clientes .
+
+  DATA: tl_cliente TYPE TABLE OF ty_cliente WITH HEADER LINE.
+
+  SELECT
+    id
+    name
+    city
+  FROM scustom
+  INTO TABLE tl_cliente
+  WHERE id = s_id.
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'seleção invalida'.
+  ELSE.
+    WRITE:/ 'código   nome  cidade'.
+  ENDIF.
+
+  LOOP AT tl_cliente.
+    WRITE:/5 tl_cliente-id,
+    15 tl_cliente-name,
+    60 tl_cliente-city.
+  ENDLOOP.
+
+
+
+ENDFORM.

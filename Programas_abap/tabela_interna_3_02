@@ -1,0 +1,54 @@
+REPORT z06_tabela_interna_3_02.
+
+*Autor: Gabriel Farah
+*exercício 3.2, utilizando de linha de cabeçalho
+
+
+TYPES: BEGIN OF ty_cliente,
+
+         id   TYPE scustom-id,
+         name TYPE scustom-name,
+         city TYPE scustom-city.
+
+TYPES END OF ty_cliente.
+
+
+
+DATA: clt_id        TYPE scustom-id,
+      tb_cliente    TYPE TABLE OF ty_cliente,
+      linha_cliente LIKE LINE OF tb_cliente.
+
+SELECT-OPTIONS s_id FOR clt_id.
+
+START-OF-SELECTION.
+
+  PERFORM lista_cliente.
+*&---------------------------------------------------------------------*
+*&      Form  LISTA_CLIENTE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM lista_cliente .
+
+  SELECT
+    id
+    name
+    city
+  FROM scustom
+  INTO TABLE tb_cliente
+  WHERE id IN s_id.
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'Não há registros na seleção'.
+    STOP.
+  ENDIF.
+
+  WRITE:/5'Cliente', 15'Nome', 60'Cidade'.
+
+  LOOP AT tb_cliente INTO linha_cliente.
+    WRITE:/5 linha_cliente-id,
+    15 linha_cliente-name,
+    60 linha_cliente-city.
+  ENDLOOP.
+
+ENDFORM.

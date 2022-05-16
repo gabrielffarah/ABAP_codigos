@@ -1,0 +1,62 @@
+REPORT z06_exercicio_5_4.
+
+*--------------------------------------------*
+*  Autor:    Gabriel Fernandes Farah
+*--------------------------------------------
+
+*---Declaração de variavel-----------------------
+
+
+
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE text-001.
+
+PARAMETERS: c_ori  TYPE spfli-cityfrom OBLIGATORY,
+            a_ori  TYPE spfli-airpfrom OBLIGATORY,
+            c_dest TYPE spfli-cityto,
+            a_dest TYPE spfli-airpto.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+START-OF-SELECTION.
+
+
+  PERFORM carrega_tabela.
+
+*&---------------------------------------------------------------------*
+*&      Form  CARREGA_TABELA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM carrega_tabela .
+
+  DATA: tl_spfli TYPE TABLE OF zspfli_aux.
+
+
+
+  CALL FUNCTION 'Z06_VOO_ORIGEM_DESTINO'
+    EXPORTING
+      cidade_ori     = c_ori
+      aeroporto_ori  = a_ori
+      cidade_dest    = c_dest
+      aeroporto_dest = a_dest
+    IMPORTING
+      tl_zspfli      = tl_spfli
+    EXCEPTIONS
+      sem_retorno    = 1
+      OTHERS         = 2.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+  WRITE: 'Cod cia', 10 'Nº do voo', 20 'Hora de partida'.
+
+  LOOP AT tl_spfli ASSIGNING FIELD-SYMBOL(<voos>).
+    WRITE: / <voos>-carrid,
+           10 <voos>-connid,
+           20 <voos>-deptime.
+  ENDLOOP.
+
+
+ENDFORM.

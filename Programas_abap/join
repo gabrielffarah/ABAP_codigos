@@ -1,0 +1,53 @@
+REPORT z06_exercicio_2_4.
+
+*Autor: Gabriel Farah
+*Programa: Resolução do exercício 2.4,
+*Data: 21/04/2022
+
+DATA clt_id TYPE scustom-id.
+
+SELECT-OPTIONS s_id FOR clt_id.
+
+START-OF-SELECTION.
+
+  PERFORM lista_voo.
+*&---------------------------------------------------------------------*
+*&      Form  LISTA_VOO
+*&---------------------------------------------------------------------*
+*       text
+
+*----------------------------------------------------------------------*
+FORM lista_voo.
+
+  TYPES: BEGIN OF ty_voo,
+
+           id   TYPE scustom-id,
+           name TYPE scustom-name,
+           date TYPE sbook-fldate,
+
+         END OF ty_voo.
+
+  DATA: tl_voo TYPE TABLE OF ty_voo.
+
+  SELECT
+    scustom~id
+    scustom~name
+    sbook~fldate
+  from scustom
+  INNER JOIN sbook
+
+
+ IF sy-subrc IS INITIAL.
+    LOOP AT lt_voo ASSIGNING FIELD-SYMBOL(<voo>).
+      WRITE:/ <voo>-id,
+               <voo>-name ,
+               <voo>-date ,
+
+    ENDLOOP.
+  ELSE.
+    WRITE:/ 'Não há voos para sua seleção'.
+  ENDIF.
+
+
+
+ENDFORM.

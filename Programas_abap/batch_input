@@ -1,0 +1,183 @@
+REPORT z06_exercicio_7_1.
+
+*Autor: Gabriel Fernandes Farah
+*Programa: Exercício 7.1
+*Data: 05/05/2022
+
+TYPES: BEGIN OF typ_arq,
+         codigo_material(18) TYPE c,
+         descricao(40)       TYPE c,
+         numero_antigo(18)   TYPE c,
+         numero_desenho(22)  TYPE c,
+       END OF typ_arq.
+
+DATA: tl_arq      TYPE TABLE OF typ_arq,
+      t_bdc_data  TYPE TABLE OF bdcdata,
+      t_mensagens TYPE TABLE OF bdcmsgcoll.
+
+PARAMETERS arquivo TYPE string OBLIGATORY.
+
+START-OF-SELECTION.
+
+  PERFORM carrega_arquivo.
+  PERFORM altera_materiais.
+*&---------------------------------------------------------------------*
+*&      Form  CARREGA_ARQUIVO
+*&---------------------------------------------------------------------*
+*       text
+*-------------------------------------------------*
+
+FORM carrega_arquivo .
+
+  CALL FUNCTION 'GUI_UPLOAD'
+    EXPORTING
+      filename                = arquivo
+      has_field_separator     = 'X'
+    TABLES
+      data_tab                = tl_arq
+*   CHANGING
+*     ISSCANPERFORMED         = ' '
+    EXCEPTIONS
+      file_open_error         = 1
+      file_read_error         = 2
+      no_batch                = 3
+      gui_refuse_filetransfer = 4
+      invalid_type            = 5
+      no_authority            = 6
+      unknown_error           = 7
+      bad_data_format         = 8
+      header_not_allowed      = 9
+      separator_not_allowed   = 10
+      header_too_long         = 11
+      unknown_dp_error        = 12
+      access_denied           = 13
+      dp_out_of_memory        = 14
+      disk_full               = 15
+      dp_timeout              = 16
+      OTHERS                  = 17.
+
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ALTERA_MATERIAIS
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM altera_materiais.
+
+  "PRIMEIRA FORMA DE FAZER
+
+*        Start new screen                                              *
+*----------------------------------------------------------------------*
+**FORM BDC_DYNPRO USING PROGRAM DYNPRO.
+**  CLEAR BDCDATA.
+**  BDCDATA-PROGRAM  = PROGRAM.
+**  BDCDATA-DYNPRO   = DYNPRO.
+**  BDCDATA-DYNBEGIN = 'X'.
+**  APPEND BDCDATA.
+**ENDFORM.
+**
+**FORM BDC_FIELD USING FNAM FVAL.
+**  IF FVAL <> NODATA.
+**    CLEAR BDCDATA.
+**    BDCDATA-FNAM = FNAM.
+**    BDCDATA-FVAL = FVAL.
+**    APPEND BDCDATA.
+**  ENDIF.
+**ENDFORM.
+**
+**FORM BDC_FIELD USING FNAM FVAL.
+**  IF FVAL <> NODATA.
+**    CLEAR BDCDATA.
+**    BDCDATA-FNAM = FNAM.
+**    BDCDATA-FVAL = FVAL.
+**    APPEND BDCDATA.
+**  ENDIF.
+**ENDFORM.
+
+
+
+  LOOP AT tl_arq ASSIGNING FIELD-SYMBOL(<fs_arq>) FROM 2.
+    REFRESH: t_bdc_data,
+            t_mensagens.
+
+    "-----------------------------------------------------------------
+    "Primeira tela
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING FIELD-SYMBOL(<bdc>).
+    <bdc>-program = 'SAPLMGMM'.
+    <bdc>-dynpro = '0060'.
+    <bdc>-dynbegin = 'X'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'BDC_OKCODE'.
+    <bdc>-fval = '=AUSW'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'RMMG1-MATNR'.
+    <bdc>-fval = <fs_arq>-codigo_material.
+
+    "-----------------------------------------------------------------
+    "Segunda tela
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-program = 'SAPLMGMM'.
+    <bdc>-dynpro = '0070'.
+    <bdc>-dynbegin = 'X'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'BDC_OKCODE'.
+    <bdc>-fval = '=ENTR'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'MSICHTAUSW-KZSEL(01)'.
+    <bdc>-fval = 'X'.
+
+    "-----------------------------------------------------------------
+    "Terceira tela
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-program = 'SAPLMGMM'.
+    <bdc>-dynpro = '4004'.
+    <bdc>-dynbegin = 'X'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'BDC_OKCODE'.
+    <bdc>-fval = '=SP02'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'MARA-BISMT'.
+    <bdc>-fval = <fs_arq>-numero_antigo.
+
+    "-----------------------------------------------------------------
+    "Quarta tela
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-program = 'SAPLMGMM'.
+    <bdc>-dynpro = '4004'.
+    <bdc>-dynbegin = 'X'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'BDC_OKCODE'.
+    <bdc>-fval = '=BU'.
+
+    APPEND INITIAL LINE TO t_bdc_data ASSIGNING <bdc>.
+    <bdc>-fnam = 'MARA-ZEINR'.
+    <bdc>-fval = <fs_arq>-numero_desenho.
+
+    "-------------------------------FIM DOS APPENDS--------------------------------
+
+    CALL TRANSACTION 'MM02' USING t_bdc_data
+                            MODE 'N'
+                      MESSAGES INTO t_mensagens.
+
+
+  ENDLOOP.
+
+
+ENDFORM.

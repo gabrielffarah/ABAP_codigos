@@ -1,0 +1,54 @@
+REPORT z06_tabela_interna_2_0.
+
+*  ------------------------------------------------------------
+*  Objetivo: listar detalhes de um unico cliente a partir do ID
+*  Autor: Gabriel Farah
+*  ------------------------------------------------------------
+*
+
+TYPES: BEGIN OF ty_cliente,
+         name  TYPE scustom-name,
+         city  TYPE scustom-city,
+         langu TYPE scustom-langu,
+       END OF ty_cliente.
+
+PARAMETERS cliente TYPE scustom-id.
+
+START-OF-SELECTION.
+
+  PERFORM mostra_cliente.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  IDS_CLIENTES
+
+*      -->P_TY_ID  text
+*----------------------------------------------------------------------*
+FORM mostra_cliente.
+
+  DATA l_cliente TYPE ty_cliente.
+
+  FIELD-SYMBOLS <linha_cliente> TYPE ty_cliente. "ponteiro para linha da tabela interna Scustom
+
+*selecionando um unico registro
+  SELECT SINGLE
+
+        name,
+        city,
+        langu
+
+    FROM scustom
+    INTO @l_cliente
+    WHERE id = @cliente.
+
+
+  IF sy-subrc <> 0.
+    WRITE:/ 'Passageiro não encontrado'.
+  ELSE.
+    WRITE:/ 'Nome:  ', l_cliente-name,
+          / 'Cidade:', l_cliente-city,
+          / 'lingua:', l_cliente-langu.
+  ENDIF.
+
+
+ENDFORM.

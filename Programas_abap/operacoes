@@ -1,0 +1,60 @@
+REPORT z06_atividade02.
+
+*--------------------------------------------
+*
+*  Programa: Z06_atividade02
+*  Objetivo: Primeira atividade
+*  Autor:    Gabriel Farah
+*
+*--------------------------------------------
+
+
+*váriaveis
+DATA:
+  soma         TYPE i,
+  diferenca    TYPE i,
+  produto      TYPE i,
+  quociente(7) TYPE p DECIMALS 2.
+
+*declarações
+
+SELECTION-SCREEN BEGIN OF BLOCK bloco1  WITH FRAME TITLE text-t01.
+PARAMETERS:
+
+  num1 TYPE i,
+  num2 TYPE i.
+
+SELECTION-SCREEN END OF BLOCK bloco1.
+
+
+START-OF-SELECTION.
+
+*----------------
+*operações
+
+  soma = num1 + num2.
+  diferenca = num1 - num2.
+  produto = num1 * num2.
+
+*teste divisão por 0
+  IF num2 <> 0.
+    quociente = num1 / num2.
+  ELSE.
+    WRITE: 'Não é possível dividir por 0.'.
+  ENDIF.
+
+*mostra os resultados na tela
+  WRITE:/ sy-datum.
+  WRITE:/ sy-uzeit.
+  WRITE:/ 'número1 é',num1.
+  WRITE:/ 'número2 é',num2.
+  WRITE:/ text-001, soma.
+  WRITE:/ 'a diferenca é', diferenca.
+  WRITE:/ 'o produto é', produto.
+*testa divisão
+  IF num2 NE 0.
+    WRITE:/ 'divisao é ', quociente.
+
+  ELSE.
+    WRITE:/ 'inexistente'.
+  ENDIF.

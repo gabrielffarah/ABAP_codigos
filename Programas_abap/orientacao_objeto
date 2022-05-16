@@ -1,0 +1,123 @@
+REPORT z06_oo_carro.
+
+*Autor: Gabriel Fernandes Farah
+*Programa: Exercício 7.1
+*objetivo: orientação a objetos
+*Data: 10/05/2022
+
+CLASS lcl_carro DEFINITION.
+
+  PUBLIC SECTION.
+
+    METHODS constructor IMPORTING marca         TYPE char30
+                                  modelo        TYPE char30
+                                  cor           TYPE char30
+                                  quilometragem TYPE i
+                                  revisao       TYPE i.
+
+
+    METHODS set_revisao IMPORTING valor_revi TYPE i.
+
+    METHODS get_identificacao EXPORTING ret_marca  TYPE char30
+                                        ret_modelo TYPE char30
+                                        ret_cor    TYPE char30.
+
+    METHODS get_km RETURNING VALUE(ret_revisao) TYPE i.
+
+    METHODS atualiza_km IMPORTING valor_km TYPE i.
+
+    METHODS verifica_revisao IMPORTING valor_intervalo_revisao TYPE i
+                             RETURNING VALUE(atingiu)          TYPE char1.
+
+
+  PROTECTED SECTION.
+
+  PRIVATE SECTION.
+
+    DATA: marca         TYPE char30,
+          modelo        TYPE char30,
+          cor           TYPE char30,
+          quilometragem TYPE i,
+          revisao       TYPE i.
+
+ENDCLASS.
+
+CLASS lcl_carro IMPLEMENTATION.
+
+  METHOD constructor.
+
+    me->marca          = marca.
+    me->modelo         = modelo.
+    me->cor            = cor.
+    me->quilometragem = quilometragem.
+    me->revisao        = revisao.
+
+
+  ENDMETHOD.
+
+  METHOD set_revisao.
+    me->revisao = valor_revi.
+  ENDMETHOD.
+
+  METHOD get_identificacao.
+
+    ret_marca = me->marca.
+    ret_modelo = me->modelo.
+    ret_cor = me->cor.
+
+  ENDMETHOD.
+
+  METHOD  get_km.
+    ret_revisao = me->revisao.
+  ENDMETHOD.
+
+  METHOD atualiza_km.
+
+    me->quilometragem = me->quilometragem + valor_km.
+
+  ENDMETHOD.
+
+  METHOD verifica_revisao.
+
+    DATA(aux) = me->revisao + valor_intervalo_revisao.
+
+    IF  aux < me->quilometragem.
+      atingiu = 'X'.
+    ELSE.
+      atingiu = ''.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+ENDCLASS.
+
+START-OF-SELECTION.
+
+  DATA: o_carro              TYPE REF TO lcl_carro,
+        o_carro2             TYPE REF TO lcl_carro,
+        p_modelo             TYPE char30,
+        p_marca              TYPE char30,
+        p_cor                TYPE char30,
+        p_ultima_revisao     TYPE i,
+        p_precisa_de_revisao TYPE c.
+
+  PARAMETERS: atual_km TYPE i.
+
+  o_carro = NEW #( marca = 'fiat'
+                   modelo   = 'uno'
+                   cor   = 'cinza'
+                   quilometragem = '6000'
+                   revisao       = '130').
+
+  o_carro2 = NEW #( marca = 'honda'
+                 modelo   = 'civic'
+                 cor   = 'vermelho'
+                 quilometragem = '8000'
+                 revisao       = '240').
+
+  CALL METHOD o_carro->get_identificacao
+    IMPORTING
+      ret_modelo = p_modelo
+      ret_marca  = p_marca
+      ret_cor    = p_cor.

@@ -1,0 +1,199 @@
+REPORT z06_exercicio1_6.
+DATA rd.
+
+*--------------------------------------------
+*
+*  Programa: Z06_atividade 1.6
+*
+*  Autor:    Gabriel Farah
+*
+*--------------------------------------------
+
+DATA:
+  v_opcao                      TYPE i,
+  v_data                       TYPE sy-datum,
+  v_data1                      TYPE sy-datum,
+  v_data2                      TYPE sy-datum,
+  vmes_extenso(30)             TYPE c,
+  vmes_extenso_10_posicoes(10) TYPE c,
+  vmes_extenso_3_posicoes(3)   TYPE c,
+  vdata                        TYPE sy-datum,
+  vdata1                       TYPE sy-datum,
+  vdata2                       TYPE sy-datum,
+  vbissexto(30)                TYPE c.
+
+
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE text-tx3.
+
+PARAMETERS:
+
+  data_ini TYPE sy-datum OBLIGATORY DEFAULT sy-datum,
+  data_fin TYPE sy-datum.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+SELECTION-SCREEN SKIP. "salta uma linha"
+
+SELECTION-SCREEN BEGIN OF BLOCK bl2 WITH FRAME TITLE text-tx4.
+
+PARAMETERS: p_rd_op1 RADIOBUTTON GROUP rd,
+            p_rd_op2 RADIOBUTTON GROUP rd,
+            p_rd_op3 RADIOBUTTON GROUP rd,
+            p_cb_op1 AS CHECKBOX,
+            p_cb_op2 AS CHECKBOX,
+            p_cb_op3 AS CHECKBOX.
+
+SELECTION-SCREEN END OF BLOCK bl2.
+
+AT SELECTION-SCREEN.
+  IF data_fin IS NOT INITIAL.
+    IF data_fin > sy-datum.
+      MESSAGE e003(z06_mensagens_erros).
+    ENDIF.
+    IF data_fin <= data_ini.
+      MESSAGE e004(z06_mensagens_erros).
+    ENDIF.
+  ENDIF.
+
+  IF p_cb_op1 IS INITIAL AND p_cb_op2 IS INITIAL AND p_cb_op3 IS INITIAL.
+    MESSAGE e005(z06_mensagens_erros).
+  ENDIF.
+
+START-OF-SELECTION.
+
+  IF p_cb_op1 IS NOT INITIAL.
+
+    IF p_rd_op1 IS NOT INITIAL.
+
+      v_opcao = 1.
+      WRITE:/ 'formato: 01/JAN/2017'.
+
+    ELSEIF p_rd_op2 IS NOT INITIAL.
+      v_opcao = 2.
+      WRITE:/ 'formato: 01 de janeiro de 2017'.
+
+    ELSE.
+      v_opcao = 3.
+      WRITE:/ 'formato: 01-jan-2017'.
+
+    ENDIF.
+
+    v_data = data_ini.
+    PERFORM imprimi_op1_data_por_extenso USING v_data
+                                               v_opcao
+                                               CHANGING vmes_extenso.
+    SKIP." comando para pular linha na tela
+    WRITE:/ vmes_extenso.
+
+    v_data = data_fin.
+    PERFORM imprimi_op1_data_por_extenso USING v_data
+                                               v_opcao
+                                               CHANGING vmes_extenso.
+    SKIP." comando para pular linha na tela
+    WRITE:/ vmes_extenso.
+
+  ENDIF.
+
+  IF p_cb_op2 IS NOT INITIAL.
+  ENDIF.
+
+  IF p_cb_op3 IS NOT INITIAL.
+
+    CONCATENATE data_ini(4) '0101' INTO v_data1.
+    CONCATENATE data_ini(4) '1231' INTO v_data2.
+
+    PERFORM imprime_op_bissexto USING v_data1
+                                      v_data2
+                                CHANGING  vbissexto.
+
+    CONCATENATE'O ano'  data_ini(4)  vbissexto INTO vbissexto SEPARATED BY space.
+    WRITE:/  vbissexto.
+  ENDIF.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  IMPRIMI_OP1_DATA_POR_EXTENSO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_V_DATA  text
+*      -->P_V_OPCAO  text
+*      <--P_VMES_EXTENSO  text
+*----------------------------------------------------------------------*
+FORM imprimi_op1_data_por_extenso  USING    p_v_data
+                                            p_v_opcao
+                                   CHANGING p_vmes_extenso.
+
+  CALL FUNCTION 'ISP_GET_MONTH_NAME'  " PEGAR NO "MODELO" A CIMA A DIREITA
+    EXPORTING
+*     DATE         = '00000000'
+      language     = sy-langu          " variáve lsy-langu = é a ligua que você logou
+      month_number = v_data+4(2)        " mes da data passada AAAAMMDD +4(2)
+    IMPORTING
+*     LANGU_BACK   =
+      longtext     = vmes_extenso_10_posicoes   " texto maior que será retornado  (na função indica 10 posições
+      shorttext    = vmes_extenso_3_posicoes    " pequeno texto que será retornado  (na função indica 3 posições
+    EXCEPTIONS                                  " erros que srão tratados pela função
+      calendar_id  = 1
+      date_error   = 2
+      not_found    = 3
+      wrong_input  = 4
+      OTHERS       = 5.
+
+  IF sy-subrc <> 0.     " variáve lsy-subrc = indica o numero do erro, caso diferente de zero
+    vmes_extenso = text-003.
+  ELSE.
+    IF v_opcao  = 1 OR v_opcao = 3.
+      IF v_opcao = 3.
+        TRANSLATE vmes_extenso_3_posicoes TO LOWER CASE.
+        CONCATENATE  v_data+6(2)
+                  '-'
+                  vmes_extenso_3_posicoes
+                   '-'
+                  v_data(4) INTO vmes_extenso.
+      ELSE.
+        CONCATENATE  v_data+6(2)
+                     '/'
+                     vmes_extenso_3_posicoes
+                      '/'
+                     v_data(4) INTO vmes_extenso.
+      ENDIF.
+    ELSE.
+      "comando para passar para maiusculo(UPPER) ou minusculo(LOWUER) 'TRANSLATE'
+      TRANSLATE vmes_extenso_10_posicoes TO LOWER CASE.
+      " comando para separar com um branco(space) entre as concatenações CONCATENATE A B  SEPARATED BY space.
+      "   CONCATENATE 'A' 'B'  SEPARATED BY space. RESULTADO "A B"
+      CONCATENATE  v_data+6(2)
+                   'de'
+                   vmes_extenso_10_posicoes
+                   'de'
+                    v_data(4) INTO vmes_extenso SEPARATED BY space.
+    ENDIF.
+  ENDIF.
+
+
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*&      Form  IMPRIME_OP_BISSEXTO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_V_DATA1  text
+*      -->P_V_DATA2  text
+*      <--P_VBISSEXTO  text
+*----------------------------------------------------------------------*
+FORM imprime_op_bissexto  USING    p_v_data1
+                                   p_v_data2
+                          CHANGING p_vbissexto.
+  DATA vdatax TYPE sy-datum.
+  vdatax =  vdata1 + 364.
+  IF vdata2 <> vdatax.
+    p_vbissexto = 'é bissexto'.
+  ELSE.
+    p_vbissexto = 'não é bissexto'.
+  ENDIF.
+
+ENDFORM.

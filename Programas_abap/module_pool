@@ -1,0 +1,14 @@
+*&---------------------------------------------------------------------*
+*& PoolMóds.         SAPMZ06_QTDEVOO
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE mzqtde_voo_top                          .    " global Data
+
+INCLUDE mzqtde_voo_o01                          .  " PBO-Modules
+INCLUDE mzqtde_voo_i01                          .  " PAI-Modules
+INCLUDE mzqtde_voo_f01                          .  " FORM-Routines

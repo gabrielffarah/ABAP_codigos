@@ -1,0 +1,57 @@
+REPORT z06_atualizacaotl_3_3.
+
+*  ------------------------------------------------------------
+*  Objetivo: Atualização de tabela transparente a partir de tabela interna
+*  Autor: Gabriel Farah
+*  ----------------------
+
+DATA: clt_companhia_aerea TYPE sflight-carrid,
+      clt_data_voo        TYPE sflight-fldate.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE tx01.
+
+SELECT-OPTIONS s_comp FOR clt_companhia_aerea.
+
+SELECT-OPTIONS s_data FOR clt_data_voo.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+START-OF-SELECTION.
+
+  PERFORM modifica_tabela.
+*&---------------------------------------------------------------------*
+*&      Form  MODIFICA_TABELA
+*----------------------------------------------------------------------*
+FORM modifica_tabela .
+
+
+  DATA:
+    tl_cliente TYPE TABLE OF sflight,
+    wa_cliente LIKE LINE OF tl_cliente.
+
+  FIELD-SYMBOLS <cliente> TYPE sflight.
+
+  SELECT *
+      FROM sflight
+      INTO TABLE tl_cliente
+      WHERE fldate IN s_data AND carrid IN s_comp.
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'seleção inválida'.
+    STOP.
+  ENDIF.
+
+  "  Modificar linhas
+
+  " 1 - Com work area
+  LOOP AT tl_cliente ASSIGNING <cliente>.
+    IF <cliente>-seatsocc > <cliente>-seatsmax * 60 / 100.
+      DELETE tl_cliente.
+    ELSE.
+      <cliente>-price = <cliente>-price * 115 / 100.
+    ENDIF.
+  ENDLOOP.
+
+
+ENDFORM.

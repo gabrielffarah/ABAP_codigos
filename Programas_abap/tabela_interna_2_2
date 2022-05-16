@@ -1,0 +1,48 @@
+REPORT z06_tabela_interna_2_2.
+
+*  ------------------------------------------------------------
+*  Autor: Gabriel Farah
+*  ------------------------------------------------------------
+*
+
+
+SELECTION-SCREEN BEGIN OF BLOCK bloco1 WITH FRAME TITLE text-t01.
+
+PARAMETERS: cod_cia OBLIGATORY TYPE scarr-carrid.
+
+SELECTION-SCREEN END OF BLOCK bloco1.
+
+START-OF-SELECTION.
+
+  PERFORM lista_voos USING cod_cia.
+*&---------------------------------------------------------------------*
+*&      Form  LISTA_VOOS
+
+*      -->P_COD_CIA  text
+*----------------------------------------------------------------------*
+FORM lista_voos  USING    p_cod_cia.
+
+  DATA lt_voo TYPE TABLE OF sflight.
+  FIELD-SYMBOLS <linha_voo> TYPE sflight.
+
+  SELECT *
+    FROM sflight
+    INTO TABLE lt_voo
+    WHERE carrid = p_cod_cia.
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'Companhia área inválida.'.
+    STOP.
+  ENDIF.
+
+  LOOP AT lt_voo ASSIGNING <linha_voo>.
+
+    WRITE:/5 <linha_voo>-connid,
+          15 <linha_voo>-fldate,
+          28 <linha_voo>-planetype.
+  ENDLOOP.
+
+
+
+
+ENDFORM.

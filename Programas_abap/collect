@@ -1,0 +1,127 @@
+REPORT z06_atualizacaotl_3_10.
+
+*  ------------------------------------------------------------
+*  Objetivo: collect
+*  Autor: Gabriel Farah
+*  ----------------------
+
+TYPES: BEGIN OF ty_distancia,
+         carrid   TYPE spfli-carrid,
+         distance TYPE spfli-distance,
+       END OF ty_distancia.
+
+TYPES: BEGIN OF ty_passageiro,
+         carrid       TYPE sbook-carrid,
+         distance(10) TYPE p DECIMALS 2,
+       END OF ty_passageiro.
+
+DATA:
+  tl_passageiro TYPE TABLE OF ty_passageiro,
+  wa_passageiro TYPE ty_passageiro.
+
+
+DATA: clt_data       TYPE sbook-fldate,
+      tl_cliente     TYPE TABLE OF sbook,
+      tl_cliente_aux TYPE TABLE OF sbook,
+      tl_distancia   TYPE TABLE OF ty_distancia.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK bl01 WITH FRAME TITLE tx01.
+
+SELECT-OPTIONS s_data FOR clt_data.
+
+SELECTION-SCREEN END OF BLOCK bl01.
+
+
+START-OF-SELECTION.
+
+  PERFORM carrega_tabela.
+  PERFORM seleciona_distancia.
+  PERFORM acumula.
+  PERFORM lista.
+
+*&---------------------------------------------------------------------*
+*&      Form  carrega_tabela
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM carrega_tabela.
+
+  SELECT *
+  FROM sbook
+  INTO TABLE tl_cliente
+  WHERE fldate IN s_data AND cancelled EQ ' '.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SLECIONA_distancia
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM seleciona_distancia .
+
+
+  SORT tl_cliente BY carrid.
+  tl_cliente_aux = tl_cliente.
+  DELETE ADJACENT DUPLICATES FROM tl_cliente_aux COMPARING carrid.
+
+  SELECT
+    carrid
+    distance
+ FROM spfli
+ INTO TABLE tl_distancia
+ FOR ALL ENTRIES IN tl_cliente_aux
+ WHERE carrid = tl_cliente_aux-carrid.
+
+  IF sy-subrc IS NOT INITIAL.
+    WRITE:/ 'seleção inválida'.
+    STOP.
+  ENDIF.
+
+  SORT tl_distancia BY carrid.
+
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*&      Form  ACUMULA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM acumula .
+
+  LOOP AT tl_cliente ASSIGNING FIELD-SYMBOL(<cliente>).
+
+    READ TABLE tl_distancia ASSIGNING FIELD-SYMBOL(<distancia>)
+                              WITH KEY carrid = <cliente>-carrid.
+
+    CLEAR wa_passageiro.
+    wa_passageiro-carrid = <cliente>-carrid.
+    wa_passageiro-distance = <distancia>-distance.
+
+    COLLECT wa_passageiro INTO tl_passageiro.
+
+  ENDLOOP.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  lista
+*&---------------------------------------------------------------------*
+*       text
+*
+FORM lista.
+
+  SORT tl_passageiro BY distance.
+
+  LOOP AT tl_passageiro ASSIGNING FIELD-SYMBOL(<cliente_distance>).
+
+    WRITE:/ <cliente_distance>-carrid,
+            <cliente_distance>-distance.
+
+  ENDLOOP.
+
+
+
+ENDFORM.
